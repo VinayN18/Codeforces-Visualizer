@@ -82,6 +82,7 @@ def get_figures_from_user_data(data):
 
 #define app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server=app.server
 
 card2 = dbc.Card(
     [
