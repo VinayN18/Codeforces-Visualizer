@@ -47,4 +47,5 @@ Tech Stack: Python Dash
 
 Running all the above commands will make the python file run in your localhoast server.
 The Link will be present in the terminal output. We need to open it.
+
 Now we can input any codeforces id in the input field present.
