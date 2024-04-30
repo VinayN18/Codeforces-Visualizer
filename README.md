@@ -8,6 +8,8 @@ Tech Stack: **Python Dash**
 
 Github Repository Link: https://github.com/VinayN18/Codeforces-Visualizer
 
+Deployed Link: https://codeforces-visualizer.onrender.com
+
 ## **Codeforces Dashboard**
 
 **Purpose of Dashboard**: User friendly Visualization for comparison and analysis of Codeforces stats.
