@@ -4,7 +4,9 @@
 
 Repository for the Data Visualization Mini Project.
 
-Tech Stack: Python Dash
+Tech Stack: **Python Dash**
+
+Github Repository Link: https://github.com/VinayN18/Codeforces-Visualizer
 
 ## **Codeforces Dashboard**
 
