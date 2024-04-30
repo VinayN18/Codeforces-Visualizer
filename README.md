@@ -3,6 +3,7 @@
 **Data Visualization Mini Project**
 
 Repository for the Data Visualization Mini Project.
+
 Tech Stack: Python Dash
 
 ## **Codeforces Dashboard**
