@@ -82,7 +82,7 @@ def get_figures_from_user_data(data):
 
 #define app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server=app.server
+server = app.server
 
 card2 = dbc.Card(
     [
@@ -208,11 +208,7 @@ app.layout = html.Div([
             dbc.Input(id='input-2', type='text',placeholder='Enter handle 2'),
             html.Br()
         ], style={'display': 'none', 'margin-right': '15px'}),
-        # html.Div(id='submit-div',children=[
-        #     html.Button('Submit', id='submit-button', n_clicks=0, outline=True, color='dark'),
-        #     ],
-        #     style={'alignItem':'center',},
-        # ),
+        
         html.Div(id='submit-div',children=[
             dbc.Button('Submit', id='submit-button', n_clicks=0, outline=True, color='info'),
         ], style={'width' : '100px', }),
@@ -247,9 +243,6 @@ app.layout = html.Div([
 ], style={'background-color':'black', 'color': 'white',})
 
 
-
-
-
 # Define a callback to show/hide the input boxes depending on the selected option
 @app.callback(
     [dash.dependencies.Output('handle-1-container', 'style'),
@@ -279,10 +272,6 @@ def show_hide_handles(value):
         Input('daily-solves-button', 'n_clicks'),
     ]
 )
-
-# def show_figure(nclicks):
-#     if nclicks>0:
-#         return dbc.Row([card2])
 
 def update_display_figure(
     n_clicks_languages,
@@ -318,13 +307,6 @@ def update_display_figure(
         return dbc.Row([card6])
     else:
         return []
-# @app.callback(
-#         Output('display-figure','children'),
-#          Input('problemsolveddifficulty-button','nclicks'),
-# )
-# def show_figure(nclicks):
-#     if nclicks>0:
-#         return [card3]
 
 
 #app callback and respective functions 1-6
@@ -344,7 +326,7 @@ def update_user_data(n_clicks, handle):
         data = response.json()
 
         user_years_figs = get_figures_from_user_data(data)
-        dropdown_options = tuple([{'label': str(year), 'value': year} for year in user_years_figs.keys() if year > 0])
+        dropdown_options = list(tuple([{'label': str(year), 'value': year} for year in user_years_figs.keys() if year > 0]))
         wait = True
         return dropdown_options
     return {}
@@ -365,6 +347,7 @@ def update_calendar_scaling_init(n_clicks, handle):
         user_years_figs = get_figures_from_user_data(data)
         dropdown_options = [{'label': str(year), 'value': year} for year in user_years_figs.keys() if year > 0]
         color_init = False
+        # print(max(list(user_years_figs.keys())))
         return max(list(user_years_figs.keys()))
     return {}
 
@@ -412,9 +395,22 @@ def update_time_taken_violin(n_clicks, handle):
 
     return {}
 
-def update_tag_graph(n_clicks, handle):
+
+
+
+
+@app.callback(
+    Output('tag-graph', 'figure'),
+    Input('submit-button', 'n_clicks'),
+    [dash.dependencies.State('input-1', 'value'),
+    dash.dependencies.State('input-2', 'value'),
+    dash.dependencies.State('handle-selection', 'value')]
+)
+def update_tag_graph_callback(n_clicks, handle1, handle2, handle_type):
     global wait
-    if n_clicks > 0 and handle:
+    if n_clicks <= 0:
+        return {}
+    if handle_type=='one':
         time.sleep(1)
         global data
         solved = filter_(data['result'], lambda x: x['verdict'] == 'OK')
@@ -444,29 +440,81 @@ def update_tag_graph(n_clicks, handle):
             )
 
             return fig
+    
+    else:
+        def generate_scatterpolar(tags_count, handle):
+            return go.Scatterpolar(
+                r=list(tags_count.values()),
+                theta=list(tags_count.keys()),
+                fill='toself',
+                name=handle
+            )
+        
+        time.sleep(1)
+        url = 'https://codeforces.com/api/user.status'
+ 
+        params1 = {'handle': handle1}
+        params2 = {'handle': handle2}
+        response1 = requests.get(url, params=params1)
+        response2 = requests.get(url, params=params2)
+        data1 = response1.json()
+        data2 = response2.json()
+
+
+        
+        all_tags_counts = []
+        max_values = []
+        for data, handle in [(data1, handle1), (data2, handle2)]:
+            solved = filter_(data['result'], lambda x: x['verdict'] == 'OK')
+            tags = group_by(solved, lambda x: x['problem']['tags'][0] if x['problem']['tags'] else 'None')
+
+            tags_count = {}
+            for tag, problems in tags.items():
+                tags_count[tag] = len(problems)
+
+            sorted_tags_count = dict(sorted(tags_count.items(), key=lambda item: item[1], reverse=True))
+            all_tags_counts.append((sorted_tags_count, handle))
+            max_values.append(max(sorted_tags_count.values()))
+
+        fig = go.Figure()
+        for tags_count, handle in all_tags_counts:
+            fig.add_trace(generate_scatterpolar(tags_count, handle))
+
+        fig.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, max(max_values)]
+                )
+            ),
+            showlegend=True,
+            title='Problems Solved by Tag'
+        )
+
+        return fig
+
 
     return {}
 
-@app.callback(
-    Output('tag-graph', 'figure'),
-    Input('submit-button', 'n_clicks'),
-    dash.dependencies.State('input-1', 'value')
-)
-def update_tag_graph_callback(n_clicks, handle):
-    return update_tag_graph(n_clicks, handle)
+
 
 @app.callback(
     Output('difficulty-graph', 'figure'),
     Input('submit-button', 'n_clicks'),
-    dash.dependencies.State('input-1', 'value')
+    [dash.dependencies.State('input-1', 'value'),
+    dash.dependencies.State('input-2', 'value'),
+    dash.dependencies.State('handle-selection', 'value')]
 )
-def update_difficulty_graph(n_clicks, handle):
+def update_difficulty_graph(n_clicks, handle1, handle2,handle_type):
     global wait
-    if n_clicks > 0 and handle:
+    if n_clicks <= 0:
+        return {}
+    if handle_type=='one':
         time.sleep(1)
         global data
         solved = filter_(data['result'], lambda x: x['verdict'] == 'OK')
         difficulties = group_by(solved, lambda x: x['problem']['index'][0])
+
 
         sorted_difficulties = sorted(difficulties.items())
 
@@ -480,6 +528,43 @@ def update_difficulty_graph(n_clicks, handle):
         }
 
         return figure
+    
+    else:
+        time.sleep(1)
+        url = 'https://codeforces.com/api/user.status'
+       
+        params1 = {'handle': handle1}
+        params2 = {'handle': handle2}
+        response1 = requests.get(url, params=params1)
+        response2 = requests.get(url, params=params2)
+        data1 = response1.json()
+        data2 = response2.json()
+      
+        solved1 = filter_(data1['result'], lambda x: x['verdict'] == 'OK')
+        solved2 = filter_(data2['result'], lambda x: x['verdict'] == 'OK')
+        difficulties1 = group_by(solved1, lambda x: x['problem']['index'][0])
+        sorted_difficulties1 = sorted(difficulties1.items())
+        
+        difficulties2 = group_by(solved2, lambda x: x['problem']['index'][0])
+        sorted_difficulties2 = sorted(difficulties2.items())
+
+        # print(sorted_difficulties1)
+        trace1 = go.Bar(
+            x=[d[0] for d in sorted_difficulties1],
+            y=[len(d[1]) for d in sorted_difficulties1],
+            name=handle1
+        )
+        trace2 = go.Bar(
+            x=[d[0] for d in sorted_difficulties2],
+            y=[len(d[1]) for d in sorted_difficulties2],
+            name=handle2
+            )
+        fig = make_subplots(rows=1, cols=1)
+        fig.add_trace(trace1, row=1, col=1)
+        fig.add_trace(trace2, row=1, col=1)
+        fig.update_layout(barmode='group')
+
+        return fig
 
     return {}
 
@@ -522,8 +607,8 @@ def update_rating_graph(n_clicks, handle1, handle2, handle_type):
         params1 = {'handle': handle1}
         response1 = requests.get(url, params=params1)
         data1 = response1.json()
-        df1 = pd.DataFrame(data1['result'])
-        print(df1.info())
+        # df1 = pd.DataFrame(data1['result'])
+        # print(df1.info())
         verdicts1 = group_by(data1['result'], 'verdict')
         trace1 = go.Bar(
             x=list(verdicts1.keys()),
@@ -541,6 +626,7 @@ def update_rating_graph(n_clicks, handle1, handle2, handle_type):
         response2 = requests.get(url, params=params2)
         data1 = response1.json()
         data2 = response2.json()
+        
         verdicts1 = group_by(data1['result'], 'verdict')
         verdicts2 = group_by(data2['result'], 'verdict')
         trace1 = go.Bar(
