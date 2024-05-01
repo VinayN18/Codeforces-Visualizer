@@ -46,7 +46,7 @@ Deployed Link: https://codeforces-visualizer.onrender.com
 5. Run the python file
 
 ```bash
-  python dashboard.py
+  python app.py
 ```
 
 Running all the above commands will make the python file run in your localhoast server.
