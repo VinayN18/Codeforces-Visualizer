@@ -86,7 +86,6 @@ def get_figures_from_user_data(data):
 
 #define app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server
 
 card2 = dbc.Card(
     [
@@ -390,11 +389,16 @@ def update_figure(year, slider_value, n_clicks, handle):
 @app.callback(
     Output('time-taken-violin', 'figure'),
     Input('submit-button', 'n_clicks'),
-    dash.dependencies.State('input-1', 'value')
+    [dash.dependencies.State('input-1', 'value'),
+    dash.dependencies.State('input-2', 'value'),
+    dash.dependencies.State('handle-selection', 'value')]
 )
-def update_time_taken_violin(n_clicks, handle):
+def update_time_taken_violin(n_clicks, handle1, handle2, handle_type):
     global wait 
-    if n_clicks > 0 and handle:
+    if n_clicks <=0:
+        return {}
+    
+    if handle_type=='one':
         time.sleep(1)
         global data
         solved = filter_(data['result'], lambda x: x['verdict'] == 'OK')
@@ -412,6 +416,35 @@ def update_time_taken_violin(n_clicks, handle):
                            color_discrete_sequence=px.colors.qualitative.Pastel,
                            category_orders={"Difficulty": ["A", "B", "C", "D", "E"]})
         figure.update_layout(title="Time Taken to Solve Problems of Each Difficulty")
+
+        return figure
+    else:
+        time.sleep(1)
+        url = 'https://codeforces.com/api/user.status'
+
+        params1 = {'handle': handle1}
+        params2 = {'handle': handle2}
+        response1 = requests.get(url, params=params1)
+        response2 = requests.get(url, params=params2)
+        data1 = response1.json()
+        data2 = response2.json()
+        
+        handles=[handle1, handle2]
+        solved_handles = {handle: filter_(data['result'], lambda x: x['verdict'] == 'OK') for data,handle in [(data1, handle1),(data2,handle2)]}
+        difficulties_handles = {handle: group_by(solved_handles[handle], lambda x: x['problem']['index'][0]) for handle in handles}
+        
+        df = pd.DataFrame(columns=['Handle', 'Difficulty', 'Time Taken'])
+
+        for handle in handles:
+            for difficulty, submissions in difficulties_handles[handle].items():
+                for submission in submissions:
+                    timer = submission['timeConsumedMillis'] / 1000 / 60  # convert to minutes
+                    df_row = pd.DataFrame({'Handle': [handle], 'Difficulty': [difficulty], 'Time Taken': [timer]})
+                    df = pd.concat([df, df_row])
+
+        figure = px.violin(df, x="Difficulty", y="Time Taken", color="Handle", box=True, points="all",
+                           title="Time Taken to Solve Problems of Each Difficulty",
+                           category_orders={"Difficulty": ["A", "B", "C", "D", "E"]})
 
         return figure
 
@@ -620,7 +653,7 @@ def update_languages_graph(n_clicks, handle1, handle2, handle_type):
         time.sleep(1)
         global data
         languages = group_by(data['result'], lambda x: x['programmingLanguage'])
-
+        print([languages])
         figure = {
             'data': [{'labels': list(languages.keys()),
                       'values': [len(languages[l]) for l in languages],
