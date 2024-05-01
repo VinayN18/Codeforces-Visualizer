@@ -2,16 +2,13 @@
 import dash
 import requests
 from pydash import *
-# import dash_core_components as dcc
 from dash import dcc
-# import dash_html_components as html
 from dash import html
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 from collections import Counter
 from datetime import datetime
 import pandas as pd
-# import dash_table as dt
 from dash import dash_table as dt
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
@@ -211,11 +208,7 @@ app.layout = html.Div([
             dbc.Input(id='input-2', type='text',placeholder='Enter handle 2'),
             html.Br()
         ], style={'display': 'none', 'margin-right': '15px'}),
-        # html.Div(id='submit-div',children=[
-        #     html.Button('Submit', id='submit-button', n_clicks=0, outline=True, color='dark'),
-        #     ],
-        #     style={'alignItem':'center',},
-        # ),
+
         html.Div(id='submit-div',children=[
             dbc.Button('Submit', id='submit-button', n_clicks=0, outline=True, color='info'),
         ], style={'width' : '100px', }),
@@ -283,9 +276,6 @@ def show_hide_handles(value):
     ]
 )
 
-# def show_figure(nclicks):
-#     if nclicks>0:
-#         return dbc.Row([card2])
 
 def update_display_figure(
     n_clicks_languages,
@@ -321,13 +311,7 @@ def update_display_figure(
         return dbc.Row([card6])
     else:
         return []
-# @app.callback(
-#         Output('display-figure','children'),
-#          Input('problemsolveddifficulty-button','nclicks'),
-# )
-# def show_figure(nclicks):
-#     if nclicks>0:
-#         return [card3]
+
 
 
 #app callback and respective functions 1-6
@@ -507,10 +491,7 @@ def update_tag_graph_callback(n_clicks, handle1, handle2, handle_type):
         
         time.sleep(1)
         url = 'https://codeforces.com/api/user.status'
-        # solved = filter_(data['result'], lambda x: x['verdict'] == 'OK')
-        # difficulties = group_by(solved, lambda x: x['problem']['index'][0])
 
-        # sorted_difficulties = sorted(difficulties.items())
         params1 = {'handle': handle1}
         params2 = {'handle': handle2}
         response1 = requests.get(url, params=params1)
@@ -590,10 +571,7 @@ def update_difficulty_graph(n_clicks, handle1, handle2,handle_type):
     else:
         time.sleep(1)
         url = 'https://codeforces.com/api/user.status'
-        # solved = filter_(data['result'], lambda x: x['verdict'] == 'OK')
-        # difficulties = group_by(solved, lambda x: x['problem']['index'][0])
 
-        # sorted_difficulties = sorted(difficulties.items())
         params1 = {'handle': handle1}
         params2 = {'handle': handle2}
         response1 = requests.get(url, params=params1)
@@ -625,14 +603,6 @@ def update_difficulty_graph(n_clicks, handle1, handle2,handle_type):
         fig.add_trace(trace1, row=1, col=1)
         fig.add_trace(trace2, row=1, col=1)
         fig.update_layout(barmode='group')
-        # figure = {
-        #     'data': [{'x': [d[0] for d in sorted_difficulties],
-        #               'y': [len(d[1]) for d in sorted_difficulties],
-        #               'type': 'bar',
-        #               'marker': {'color': '#FDB813'}
-        #               }],
-        #     'layout': {'title': 'Problems Solved by Difficulty', 'showlegend': False}
-        # }
 
         return fig
 
@@ -673,28 +643,7 @@ def update_languages_graph(n_clicks, handle1, handle2, handle_type):
         response2 = requests.get(url, params=params2)
         data1 = response1.json()
         data2 = response2.json()
-        # all_languages_counts = {}
-        # for data, handle in [(data1, handle1), (data2, handle2)]:
-        #     solved = filter_(data['result'], lambda x: x['verdict'] == 'OK')
-        #     for submission in solved:
-        #         language = submission['programmingLanguage']
-        #         if language not in all_languages_counts:
-        #             all_languages_counts[language] = 0
-        #         all_languages_counts[language] += 1
-
-        # sorted_languages_counts = dict(sorted(all_languages_counts.items(), key=lambda item: item[1], reverse=True))
-
-        # languages = list(sorted_languages_counts.keys())
-        # counts = list(sorted_languages_counts.values())
-
-        # fig = go.Figure(data=[go.Bar(y=languages, x=counts, orientation='h')])
-        # fig.update_layout(
-        #     xaxis=dict(title='Number of Submissions'),
-        #     yaxis=dict(title='Languages'),
-        #     title='Submissions by Language',
-        #     barmode='group'
-        # )
-
+        
         all_languages_counts = {}
         handles=[handle1, handle2]
         for data, handle in [(data1, handle1), (data2, handle2)]:
